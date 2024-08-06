@@ -12,3 +12,46 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id               String          @id @default(uuid())
+  age              Int
+  name             String
+  email            String          @unique
+  role             Role            @default(BASIC)
+  writtenPosts     Post[]          @relation("WrittenPosts")
+  favoritePosts    Post[]          @relation("FavouritePosts")
+  userPreference   UserPreference? @relation(fields: [userPreferenceId], references: [id])
+  userPreferenceId String?         @unique
+
+  @@unique([age, name])
+  @@index([email])
+}
+
+model UserPreference {
+  id          String  @id @default(uuid())
+  emailUpdate Boolean
+  user        User?
+}
+
+model Post {
+  id           String     @id @default(uuid())
+  rating       Float
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+  author       User       @relation("WrittenPosts", fields: [authorID], references: [id])
+  authorID     String
+  favoritedBy  User?      @relation("FavouritePosts", fields: [favoriteById], references: [id])
+  favoriteById String?
+  categories   Category[]
+}
+
+model Category {
+  id    String @id @default(uuid())
+  posts Post[]
+}
+
+enum Role {
+  BASIC
+  ADMIN
+}
